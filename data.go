@@ -108,11 +108,15 @@ func Data(key string, start string, end string, labels string) models.Samples {
 func DataBuckets(key string, start string, end string, labels string, bucket string) models.Buckets {
 	var buckets models.Buckets
 
+	// check bucket time
 	bucketTime, err := strconv.ParseUint(bucket, 0, 64)
 	if err != nil {
 		// default bucket time is 100 * Millisecond
 		bucketTime = 100 * 1000
 	}
+
+	// check labels
+	labelsOk, err := regexp.MatchString("^[a-zA-Z0-9-,]+$", labels)
 
 	// prepare query statement
 	stmt, err := tx.Prepare(selectBucketFromTable + SelectSqlQuery(key, start, end, labels) + " group by key, (time / ?)")
@@ -131,6 +135,10 @@ func DataBuckets(key string, start string, end string, labels string, bucket str
 	// append samples to output list
 	for rows.Next() {
 		var bucket models.Bucket
+		if labelsOk {
+			bucket.Labels = labels
+		}
+
 		err = rows.Scan(&bucket.Key, &bucket.Count, &bucket.Start, &bucket.End, &bucket.Min, &bucket.Max, &bucket.Avg)
 		if err != nil {
 			log.Print(err)

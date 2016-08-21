@@ -43,8 +43,7 @@ func GetSamplesHandler(w http.ResponseWriter, r *http.Request) {
 		// get samples
 		samples := Data(key, start, end, labels)
 		if samples == nil {
-			message := models.ErrorResponse{Status: "running", Message: "no samples found"}
-			SendErr(w, message)
+			w.Write([]byte("[]"))
 			return
 		}
 
@@ -58,8 +57,7 @@ func GetSamplesHandler(w http.ResponseWriter, r *http.Request) {
 		// get buckets
 		buckets := DataBuckets(key, start, end, labels, bucket)
 		if buckets == nil {
-			message := models.ErrorResponse{Status: "running", Message: "no buckets found"}
-			SendErr(w, message)
+			w.Write([]byte("[]"))
 			return
 		}
 
@@ -83,8 +81,7 @@ func GetOneSampleHandler(w http.ResponseWriter, r *http.Request) {
 	// get one sample
 	sample := DataFind(int(id))
 	if sample.Id == 0 {
-		message := models.ErrorResponse{Status: "running", Message: "no sample found"}
-		SendErr(w, message)
+		w.Write([]byte("{}"))
 		return
 	}
 
