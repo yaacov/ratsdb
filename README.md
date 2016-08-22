@@ -1,37 +1,61 @@
 # ratsdb
 Rest API for time series data bases
 
-## A Restul API Front end for tsdb's
+### A Restul API Front end for tsdb's
 A Restful API for querying time-value samples. Data is grouped by keys, and labels.
 Users can query data using keys and labels. Time-value samples can also grouped in time buckets.
 
-## API Path and varialbes
-### Query samples
-GET  http://hostname/samples/
-#### Query parameters
-    key: sample key.
-    labels: comma sepreated list of labels.
-    start: start time in millisecond since Jan 01 1970.
-    end: end time in millisecond since Jan 01 1970.
-    bucket: group samples by milliseconds.
+### API Path and varialbes
+#### Query samples
+Method | Path
+-------| ----
+GET | http://hostname/samples/
 
-### Query one sample
-GET  http://hostname/samples/id
-### Insert one sample
-POST http://hostname/samples/
-#### Post body json
+##### Examples
+
 ```
-{ "key": key, "value": value: [, "labels": comma separated list of labels]}
+GET: http://localhost:8080/samples/?key=Cats&labels=ginger,tabby
+GET: http://localhost:8080/samples/?key=Cats&start=1471787960527&end=1471787971180
 ```
 
-## Backends
-  Sqlite (memory)
+##### Query parameters
+name | type | optional | description
+-----|------|----------|------------
+key | string | optional | sample key
+labels | comma separeted strings | optional | comma sepreated list of labels
+start | integer | optional | start time in millisecond since Jan 01 1970
+end | integer | optional | end time in millisecond since Jan 01 1970
+bucket | integer | optional | group samples by milliseconds
 
-## Examples
+#### Query one sample
+Method | Path
+-------| ----
+GET | http://hostname/samples/id
 
-### Query all samples
-GET: http://localhost:8080/samples
-#### Responce
+#### Insert one sample
+Method | Path
+-------| ----
+POST |  http://hostname/samples/
+
+##### Post body (JSON application/json)
+```
+{
+  "key": key,
+  "value": value,
+ ["labels": comma separated list of labels]
+}
+```
+
+### Backends
+- Sqlite (memory)
+- Sqlite (file)
+
+### Examples
+
+#### Query all samples
+http://localhost:8080/samples
+
+##### Responce
 
 ```
 [
@@ -72,8 +96,9 @@ GET: http://localhost:8080/samples/2
 }
 ```
 
-### Query by key and labels
+#### Query by key and labels
 GET: http://localhost:8080/samples/?key=Cats&labels=ginger
+##### Response
 ```
 [
   {
@@ -102,6 +127,7 @@ GET: http://localhost:8080/samples/?key=Cats&labels=ginger
 
 ### Query by time
 GET: http://localhost:8080/samples/?key=Cats&start=1471787960527&end=1471787971180
+#### Response
 ```
 [
   {
@@ -114,8 +140,9 @@ GET: http://localhost:8080/samples/?key=Cats&start=1471787960527&end=14717879711
 ]
 ```
 
-### Query using time buckets
+#### Query using time buckets
 GET: http://localhost:8080/samples/?key=Cats&labels=ginger&bucket=10000
+##### Response
 ```
 [
   {
@@ -141,20 +168,16 @@ GET: http://localhost:8080/samples/?key=Cats&labels=ginger&bucket=10000
 ]
 ```
 
-### Insert new samples
-#### Query
+#### Insert new samples
+##### Query
 POST: http://localhost:8080/samples
 
-Body:
-```
-{
-  "key": "Cats",
-  "labels": "tabby,ginger",
-  "value": 2.0
-}
-```
+Field | Content
+------| -------------
+URL   | http://localhost:8080/samples
+Body  | `{ "key": "Cats", "labels":"tabby,ginger", "value": 2.0 }`
 
-#### Response
+##### Response
 ```
 {
   "id": 1,
