@@ -41,7 +41,7 @@ func GetSamplesHandler(w http.ResponseWriter, r *http.Request) {
 
 	if bucket == `` {
 		// get samples
-		samples := Data(key, start, end, labels)
+		samples := DataList(key, start, end, labels)
 		if samples == nil {
 			w.Write([]byte("[]"))
 			return
@@ -135,4 +135,17 @@ func PostSampleHandler(w http.ResponseWriter, r *http.Request) {
 		SendErr(w, message)
 		return
 	}
+}
+
+// Handler function for deletion of one smaple request
+func DeleteOneSampleHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+
+	vars := mux.Vars(r)
+	id, _ := strconv.ParseInt(vars["sampleId"], 0, 64)
+
+	// delete one sample
+	DataDelete(int(id))
+	w.Write([]byte("{}"))
 }

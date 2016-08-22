@@ -70,11 +70,11 @@ func SelectSqlQuery(key string, start string, end string, labels string) string 
 }
 
 // Get list of data objects from table
-func Data(key string, start string, end string, labels string) models.Samples {
+func DataList(key string, start string, end string, labels string) models.Samples {
 	var samples models.Samples
 
 	// prepare query statement
-	stmt, err := tx.Prepare(selectFromTable + SelectSqlQuery(key, start, end, labels))
+	stmt, err := tx.Prepare(selectFromTable + SelectSqlQuery(key, start, end, labels) + " order by time")
 	if err != nil {
 		log.Print(err)
 	}
@@ -119,7 +119,7 @@ func DataBuckets(key string, start string, end string, labels string, bucket str
 	labelsOk, err := regexp.MatchString("^[a-zA-Z0-9-,]+$", labels)
 
 	// prepare query statement
-	stmt, err := tx.Prepare(selectBucketFromTable + SelectSqlQuery(key, start, end, labels) + " group by key, (time / ?)")
+	stmt, err := tx.Prepare(selectBucketFromTable + SelectSqlQuery(key, start, end, labels) + " group by key, (time / ?) order by start")
 	if err != nil {
 		log.Print(err)
 	}
@@ -180,7 +180,9 @@ func DataCreate(t models.Sample) models.Sample {
 
 	// set the new sample Id and Time fields
 	t.Id = currentId
-	t.Time = time.Now().UnixNano() / int64(time.Millisecond)
+	if t.Time == 0 {
+		t.Time = time.Now().UnixNano() / int64(time.Millisecond)
+	}
 
 	// prepare insert statement
 	stmt, err := tx.Prepare(insertToTable)
@@ -198,6 +200,22 @@ func DataCreate(t models.Sample) models.Sample {
 	return t
 }
 
+// Delete one data object in table
+func DataDelete(id int) {
+	// prepare query statement
+	stmt, err := tx.Prepare(deleteOneFromTable)
+	if err != nil {
+		log.Print(err)
+	}
+	defer stmt.Close()
+
+	// query one sample
+	_, err = stmt.Exec(id)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
 // global variables
 var (
 	currentId int
@@ -213,6 +231,7 @@ const createTable = `create table if not exists samples (
 );`
 const insertToTable = `insert into samples (id, time, key, value, labels) values (?, ?, ?, ?, ?);`
 const selectOneFromTable = `select id, time, key, value, labels from samples where id = ?;`
+const deleteOneFromTable = `delete from samples where id = ?;`
 const selectFromTable = `select id, time, key, value, labels from samples`
 const selectBucketFromTable = `select key, count(id) as count,
   min(time) as start, max(time) as end,
